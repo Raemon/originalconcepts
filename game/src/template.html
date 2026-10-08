@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What Must Be</title>
+<style>/*__STYLE__*/</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div id="brand" title="Levels and laws"><b>WHAT</b> MUST <b>BE</b></div>
+    <div id="lvl"></div>
+  </header>
+  <div id="law"></div>
+  <div id="stage" tabindex="0">
+    <canvas id="cv" aria-label="game board"></canvas>
+    <div id="tip"></div>
+    <div id="focus">click to play</div>
+    <div id="win"><span class="w">SOLVED</span><button class="b" id="next">Next ▸</button></div>
+    <div id="card"></div>
+  </div>
+  <div class="overlay" id="menu"></div>
+  <div id="text"></div>
+  <div id="bar">
+    <div id="keys"><kbd>←↑→↓</kbd> move · <kbd>space</kbd> wait · <kbd>z</kbd> undo · <kbd>r</kbd> restart · <kbd>esc</kbd> levels · hover anything to ask why</div>
+    <div id="btns">
+      <button class="b" id="bUndo" title="Undo (z)">Undo</button>
+      <button class="b" id="bReset" title="Restart (r)">Restart</button>
+      <button class="b" id="bMenu" title="Levels (esc)">Levels</button>
+    </div>
+  </div>
+  <div id="pad">
+    <div class="grid">
+      <span></span><button data-d="0">▲</button><span></span>
+      <button data-d="3">◀</button><button data-d="-1" title="wait">·</button><button data-d="1">▶</button>
+      <span></span><button data-d="2">▼</button><span></span>
+    </div>
+  </div>
+</div>
+<script>/*__ENGINE__*/</script>
+<script>window.LEVELS = /*__LEVELS__*/;</script>
+<script>/*__GAME__*/</script>
+</body>
+</html>
