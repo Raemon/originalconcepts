@@ -108,3 +108,7 @@ node game/tools/playtest.js       # plays each solution in the built page and ch
 ## Embedding
 
 `dist/what-must-be.html` is built to run in a sandboxed iframe, such as a LessWrong post widget. It makes no network requests and uses no storage. It sizes itself to its content and works at widths from 340 to 700 px. It takes keyboard focus when clicked and doesn't scroll the parent page.
+
+## How it was made
+
+[`docs/process/`](docs/process/README.md) has the record of how the concepts were found: the eight brainstorm prompts, the subagents' reports, my notes while choosing, and a timeline.
