@@ -17,10 +17,9 @@ body {
   color: var(--ink);
   font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
   -webkit-font-smoothing: antialiased;
-  overscroll-behavior: contain;
 }
 #app { max-width: 780px; margin: 0 auto; padding-block: 10px 12px; padding-inline: 16px; box-sizing: border-box; position: relative; user-select: none; -webkit-user-select: none; }
-button { font: inherit; color: inherit; }
+button { font: inherit; color: inherit; touch-action: manipulation; }
 header { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 2px 2px 8px; border-bottom: 1px solid var(--line); }
 #brand { letter-spacing: 0.32em; font-size: 12px; color: var(--dim); white-space: nowrap; cursor: pointer; }
 #brand b { color: var(--ink); font-weight: normal; }
@@ -29,7 +28,8 @@ header { display: flex; align-items: baseline; justify-content: space-between; g
 #law { font-style: italic; color: #aab6db; font-size: 14px; line-height: 1.35; padding: 8px 2px 8px; min-height: 19px; }
 #law .tag { font-style: normal; font-variant: small-caps; letter-spacing: 0.12em; color: var(--gold); margin-right: 6px; }
 #stage { position: relative; width: 100%; outline: none; }
-#cv { touch-action: none; }
+#cv { touch-action: pan-y pinch-zoom; }
+#app.engaged #cv { touch-action: none; }
 #cv { display: block; width: 100%; border-radius: 6px; box-shadow: 0 0 0 1px rgba(120, 140, 210, 0.16), 0 10px 40px rgba(0, 0, 0, 0.55); }
 #tip {
   position: absolute; pointer-events: none; max-width: 300px; padding: 8px 10px; border-radius: 6px;
@@ -1927,14 +1927,24 @@ cv.addEventListener('mousemove', ev => {
   if (c !== hoverCell) { hoverCell = c; showTipAt(c); }
 });
 cv.addEventListener('mouseleave', () => { hoverCell = -1; hideTip(); });
-// touch: swipe to move, tap to ask
-let touch0 = null;
-cv.addEventListener('pointerdown', ev => { stage.focus(); setFocus(true); touch0 = { x: ev.clientX, y: ev.clientY, t: now(), c: cellFromEvent(ev) }; });
+// touch: swipe to move, tap to ask. Until the game is tapped, a swipe over the board scrolls the page
+// (the board may sit inside a post), and once the board is mostly scrolled out of view it lets go again.
+const coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+if (coarse) $('focus').textContent = 'tap to play';
+let touch0 = null, engaged = false;
+function engage(v) { if (engaged === v) return; engaged = v; $('app').classList.toggle('engaged', v); setFocus(focused); }
+document.addEventListener('click', () => engage(true), true);
+if (window.IntersectionObserver) new IntersectionObserver(es => { if (es[es.length - 1].intersectionRatio < 0.35) engage(false); }, { threshold: [0, 0.35] }).observe(cv);
+cv.addEventListener('pointerdown', ev => {
+  if (ev.pointerType === 'mouse') { stage.focus(); setFocus(true); }
+  touch0 = { x: ev.clientX, y: ev.clientY, t: now(), c: cellFromEvent(ev) };
+});
+cv.addEventListener('pointercancel', () => { touch0 = null; });
 cv.addEventListener('pointerup', ev => {
   if (!touch0) return;
   const dx = ev.clientX - touch0.x, dy = ev.clientY - touch0.y;
   const dist = Math.hypot(dx, dy);
-  if (dist > 22) { act(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0)); }
+  if (dist > 22) { if (engaged || ev.pointerType === 'mouse') act(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0)); }
   else if (ev.pointerType !== 'mouse') { hoverCell = touch0.c; focusedOrHover = true; showTipAt(touch0.c); }
   touch0 = null;
 });
@@ -1944,7 +1954,7 @@ $('bReset').onclick = () => restart();
 $('bMenu').onclick = () => openMenu();
 $('brand').onclick = () => openMenu();
 $('next').onclick = () => next();
-function setFocus(v) { focused = v; $('focus').style.opacity = v ? '0' : '1'; }
+function setFocus(v) { focused = v; $('focus').style.opacity = (coarse ? engaged : v) ? '0' : '1'; }
 window.addEventListener('focus', () => setFocus(true));
 window.addEventListener('blur', () => setFocus(false));
 stage.addEventListener('mousedown', () => { stage.focus(); setFocus(true); });

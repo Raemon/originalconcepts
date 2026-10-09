@@ -1072,14 +1072,24 @@ cv.addEventListener('mousemove', ev => {
   if (c !== hoverCell) { hoverCell = c; showTipAt(c); }
 });
 cv.addEventListener('mouseleave', () => { hoverCell = -1; hideTip(); });
-// touch: swipe to move, tap to ask
-let touch0 = null;
-cv.addEventListener('pointerdown', ev => { stage.focus(); setFocus(true); touch0 = { x: ev.clientX, y: ev.clientY, t: now(), c: cellFromEvent(ev) }; });
+// touch: swipe to move, tap to ask. Until the game is tapped, a swipe over the board scrolls the page
+// (the board may sit inside a post), and once the board is mostly scrolled out of view it lets go again.
+const coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+if (coarse) $('focus').textContent = 'tap to play';
+let touch0 = null, engaged = false;
+function engage(v) { if (engaged === v) return; engaged = v; $('app').classList.toggle('engaged', v); setFocus(focused); }
+document.addEventListener('click', () => engage(true), true);
+if (window.IntersectionObserver) new IntersectionObserver(es => { if (es[es.length - 1].intersectionRatio < 0.35) engage(false); }, { threshold: [0, 0.35] }).observe(cv);
+cv.addEventListener('pointerdown', ev => {
+  if (ev.pointerType === 'mouse') { stage.focus(); setFocus(true); }
+  touch0 = { x: ev.clientX, y: ev.clientY, t: now(), c: cellFromEvent(ev) };
+});
+cv.addEventListener('pointercancel', () => { touch0 = null; });
 cv.addEventListener('pointerup', ev => {
   if (!touch0) return;
   const dx = ev.clientX - touch0.x, dy = ev.clientY - touch0.y;
   const dist = Math.hypot(dx, dy);
-  if (dist > 22) { act(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0)); }
+  if (dist > 22) { if (engaged || ev.pointerType === 'mouse') act(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0)); }
   else if (ev.pointerType !== 'mouse') { hoverCell = touch0.c; focusedOrHover = true; showTipAt(touch0.c); }
   touch0 = null;
 });
@@ -1089,7 +1099,7 @@ $('bReset').onclick = () => restart();
 $('bMenu').onclick = () => openMenu();
 $('brand').onclick = () => openMenu();
 $('next').onclick = () => next();
-function setFocus(v) { focused = v; $('focus').style.opacity = v ? '0' : '1'; }
+function setFocus(v) { focused = v; $('focus').style.opacity = (coarse ? engaged : v) ? '0' : '1'; }
 window.addEventListener('focus', () => setFocus(true));
 window.addEventListener('blur', () => setFocus(false));
 stage.addEventListener('mousedown', () => { stage.focus(); setFocus(true); });
